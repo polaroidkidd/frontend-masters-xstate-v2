@@ -1,5 +1,6 @@
 // @ts-check
 import '../style.css';
+// @ts-ignore
 import { createMachine, assign, interpret, send } from 'xstate';
 import elements from '../utils/elements';
 import { raise } from 'xstate/lib/actions';
@@ -60,6 +61,7 @@ const playerMachine = createMachine({
     assignSongData: assign({
       title: (_, e) => e.data.title,
       artist: (_, e) => e.data.artist,
+      // @ts-ignore
       duration: (ctx, e) => e.data.duration,
       elapsed: 0,
       likeStatus: 'unliked',
@@ -88,20 +90,25 @@ const playerMachine = createMachine({
 });
 
 const service = interpret(playerMachine).start();
-window.service = service;
+window["service"] = service;
 
+// @ts-ignore
 elements.elPlayButton.addEventListener('click', () => {
   service.send({ type: 'PLAY' });
 });
+// @ts-ignore
 elements.elPauseButton.addEventListener('click', () => {
   service.send({ type: 'PAUSE' });
 });
+// @ts-ignore
 elements.elSkipButton.addEventListener('click', () => {
   service.send({ type: 'SKIP' });
 });
+// @ts-ignore
 elements.elLikeButton.addEventListener('click', () => {
   service.send({ type: 'LIKE' });
 });
+// @ts-ignore
 elements.elDislikeButton.addEventListener('click', () => {
   service.send({ type: 'DISLIKE' });
 });
@@ -110,9 +117,13 @@ service.subscribe((state) => {
   console.log(state.context);
   const { context } = state;
 
+  // @ts-ignore
   elements.elLoadingButton.hidden = !state.hasTag('loading');
+  // @ts-ignore
   elements.elPlayButton.hidden = !state.can({ type: 'PLAY' });
+  // @ts-ignore
   elements.elPauseButton.hidden = !state.can({ type: 'PAUSE' });
+  // @ts-ignore
   elements.elVolumeButton.dataset.level =
     context.volume === 0
       ? 'zero'
@@ -122,14 +133,20 @@ service.subscribe((state) => {
       ? 'high'
       : undefined;
 
+  // @ts-ignore
   elements.elScrubberInput.setAttribute('max', context.duration);
+  // @ts-ignore
   elements.elScrubberInput.value = context.elapsed;
+  // @ts-ignore
   elements.elElapsedOutput.innerHTML = formatTime(
     context.elapsed - context.duration
   );
 
+  // @ts-ignore
   elements.elLikeButton.dataset.likeStatus = context.likeStatus;
+  // @ts-ignore
   elements.elArtist.innerHTML = context.artist;
+  // @ts-ignore
   elements.elTitle.innerHTML = context.title;
 });
 

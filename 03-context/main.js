@@ -1,13 +1,21 @@
 // @ts-check
-import '../style.css';
-import { createMachine, assign, interpret, send } from 'xstate';
-import elements from '../utils/elements';
-import { raise } from 'xstate/lib/actions';
-import { formatTime } from '../utils/formatTime';
+import "../style.css";
+// @ts-ignore
+// @ts-ignore
+import { createMachine, assign, interpret, send } from "xstate";
+import elements from "../utils/elements";
+import { raise } from "xstate/lib/actions";
+import { formatTime } from "../utils/formatTime";
 
 const playerMachine = createMachine({
-  initial: 'loading',
+  initial: "loading",
   context: {
+    title: "",
+    artist: "",
+    duration: -1,
+    likeStatus: "unliked",
+    elapsed: 0,
+    volume: 0,
     // Add initial context here for:
     // title, artist, duration, elapsed, likeStatus, volume
   },
@@ -15,76 +23,65 @@ const playerMachine = createMachine({
     loading: {
       on: {
         LOADED: {
-          actions: 'assignSongData',
-          target: 'playing',
+          actions: "assignSongData",
+          target: "playing",
         },
       },
     },
     paused: {
       on: {
-        PLAY: { target: 'playing' },
+        PLAY: { target: "playing" },
       },
     },
     playing: {
-      entry: 'playAudio',
-      exit: 'pauseAudio',
+      entry: "playAudio",
+      exit: "pauseAudio",
       on: {
-        PAUSE: { target: 'paused' },
+        PAUSE: { target: "paused" },
       },
     },
   },
   on: {
     SKIP: {
-      actions: 'skipSong',
-      target: 'loading',
+      actions: "skipSong",
+      target: "loading",
     },
     LIKE: {
-      actions: 'likeSong',
+      actions: "likeSong",
     },
     UNLIKE: {
-      actions: 'unlikeSong',
+      actions: "unlikeSong",
     },
     DISLIKE: {
-      actions: ['dislikeSong', raise('SKIP')],
+      actions: ["dislikeSong", raise("SKIP")],
     },
     VOLUME: {
-      actions: 'assignVolume',
+      actions: "assignVolume",
     },
-    'AUDIO.TIME': {
-      actions: 'assignTime',
+    "AUDIO.TIME": {
+      actions: "assignTime",
     },
   },
 }).withConfig({
   actions: {
     assignSongData: assign({
-      // Assign the `title`, `artist`, and `duration` from the event.
-      // Assume the event looks like this:
-      // {
-      //   type: 'LOADED',
-      //   data: {
-      //     title: 'Some title',
-      //     artist: 'Some artist',
-      //     duration: 123
-      //   }
-      // }
-      // Also, reset the `elapsed` and `likeStatus` values.
+      artist: (_, event) => event.data.artist,
+      title: (_, event) => event.data.title,
+      duration: (_, event) => event.data.duration,
+      likeStatus: "unliked",
+      elapsed: 0,
     }),
     likeSong: assign({
-      // Assign the `likeStatus` to "liked"
+      likeStatus: "liked",
     }),
     unlikeSong: assign({
-      // Assign the `likeStatus` to 'unliked',
+      likeStatus: "unliked",
     }),
     dislikeSong: assign({
-      // Assign the `likeStatus` to 'disliked',
+      likeStatus: "disliked",
     }),
     assignVolume: assign({
-      // Assign the `volume` to the `level` from the event.
-      // Assume the event looks like this:
-      // {
-      //   type: 'VOLUME',
-      //   level: 5
-      // }
+      volume: (ctx, event) => ctx.volume + event.level,
     }),
     assignTime: assign({
       // Assign the `elapsed` value to the `currentTime` from the event.
@@ -95,7 +92,7 @@ const playerMachine = createMachine({
       // }
     }),
     skipSong: () => {
-      console.log('Skipping song');
+      console.log("Skipping song");
     },
     playAudio: () => {},
     pauseAudio: () => {},
@@ -103,56 +100,85 @@ const playerMachine = createMachine({
 });
 
 const service = interpret(playerMachine).start();
-window.service = service;
+window["service"] = service;
 
-elements.elPlayButton.addEventListener('click', () => {
-  service.send({ type: 'PLAY' });
+// @ts-ignore
+elements.elPlayButton.addEventListener("click", () => {
+  service.send({ type: "PLAY" });
 });
-elements.elPauseButton.addEventListener('click', () => {
-  service.send({ type: 'PAUSE' });
+// @ts-ignore
+elements.elPauseButton.addEventListener("click", () => {
+  service.send({ type: "PAUSE" });
 });
-elements.elSkipButton.addEventListener('click', () => {
-  service.send({ type: 'SKIP' });
+// @ts-ignore
+elements.elSkipButton.addEventListener("click", () => {
+  service.send({ type: "SKIP" });
 });
-elements.elLikeButton.addEventListener('click', () => {
-  service.send({ type: 'LIKE' });
+// @ts-ignore
+elements.elLikeButton.addEventListener("click", () => {
+  service.send({ type: "LIKE" });
 });
-elements.elDislikeButton.addEventListener('click', () => {
-  service.send({ type: 'DISLIKE' });
+// @ts-ignore
+elements.elDislikeButton.addEventListener("click", () => {
+  service.send({ type: "DISLIKE" });
+});
+
+elements.elVolumeButton?.addEventListener("click", () => {
+  console.info(
+    "service.machine.context.volume: ",
+    service.machine.context.volume
+  );
+  service.send({
+    type: "VOLUME",
+    level: service.machine.context.volume + 1,
+  });
 });
 
 service.subscribe((state) => {
   console.log(state.context);
   const { context } = state;
 
-  elements.elLoadingButton.hidden = !state.hasTag('loading');
-  elements.elPlayButton.hidden = !state.can({ type: 'PLAY' });
-  elements.elPauseButton.hidden = !state.can({ type: 'PAUSE' });
+  // @ts-ignore
+  elements.elLoadingButton.hidden = !state.hasTag("loading");
+  // @ts-ignore
+  elements.elPlayButton.hidden = !state.can({ type: "PLAY" });
+  // @ts-ignore
+  elements.elPauseButton.hidden = !state.can({ type: "PAUSE" });
+  // @ts-ignore
   elements.elVolumeButton.dataset.level =
+    // @ts-ignore
     context.volume === 0
-      ? 'zero'
-      : context.volume <= 2
-      ? 'low'
-      : context.volume >= 8
-      ? 'high'
+      ? "zero"
+      : // @ts-ignore
+      context.volume <= 2
+      ? "low"
+      : // @ts-ignore
+      context.volume >= 8
+      ? "high"
       : undefined;
 
-  elements.elScrubberInput.setAttribute('max', context.duration);
+  // @ts-ignore
+  elements.elScrubberInput.setAttribute("max", context.duration);
+  // @ts-ignore
   elements.elScrubberInput.value = context.elapsed;
+  // @ts-ignore
   elements.elElapsedOutput.innerHTML = formatTime(
+    // @ts-ignore
     context.elapsed - context.duration
   );
-
+  // @ts-ignore
   elements.elLikeButton.dataset.likeStatus = context.likeStatus;
+  // @ts-ignore
   elements.elArtist.innerHTML = context.artist;
+  // @ts-ignore
   elements.elTitle.innerHTML = context.title;
 });
 
 service.send({
-  type: 'LOADED',
+  type: "LOADED",
   data: {
-    title: 'Some song title',
-    artist: 'Some song artist',
+    title: "Some song title",
+    artist: "Some song artist",
     duration: 100,
   },
 });

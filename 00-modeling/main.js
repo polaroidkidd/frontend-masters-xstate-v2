@@ -1,4 +1,4 @@
-import '../style.css';
+import "../style.css";
 
 // Create a state machine transition function either using:
 // - a switch statement (or nested switch statements)

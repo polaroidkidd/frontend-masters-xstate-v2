@@ -1,82 +1,109 @@
 // @ts-check
-import '../style.css';
-import { createMachine, assign, interpret, send } from 'xstate';
-import { raise } from 'xstate/lib/actions';
-import elements from '../utils/elements';
+import "../style.css";
+// @ts-ignore
+import { createMachine, assign, interpret, send } from "xstate";
+import { raise } from "xstate/lib/actions";
+import elements from "../utils/elements";
+import { inspect } from "@xstate/inspect";
 
+inspect({
+  iframe: false,
+  url: "https://stately.ai/viz?inspect",
+});
 const playerMachine = createMachine({
-  initial: 'loading',
+  predictableActionArguments: true,
+  initial: "loading",
   states: {
     loading: {
+      entry: "startPlaying",
       on: {
         LOADED: {
-          // Add an action here to assign the song data
-          target: 'playing',
+          actions: "assignSongData",
+          target: "playing",
         },
       },
     },
     paused: {
       on: {
-        PLAY: { target: 'playing' },
+        PLAY: { target: "playing" },
       },
     },
     playing: {
-      // When this state is entered, add an action to play the audio
-      // When this state is exited, add an action to pause the audio
+      entry: "playAudio",
+      exit: "pauseAudio",
       on: {
-        PAUSE: { target: 'paused' },
+        PAUSE: { target: "paused" },
       },
     },
   },
   on: {
     SKIP: {
-      // Add an action to skip the song
-      target: 'loading',
+      actions: "skipSong",
+      target: "loading",
     },
     LIKE: {
-      // Add an action to like the song
+      actions: "likeSong",
     },
     UNLIKE: {
-      // Add an action to unlike the song
+      actions: "unlikeSong",
     },
     DISLIKE: {
-      // Add two actions to dislike the song and raise the skip event
+      actions: ["dislikeSong", raise("SKIP")],
     },
     VOLUME: {
-      // Add an action to assign to the volume
+      actions: "assignVolume",
     },
   },
 }).withConfig({
   actions: {
-    // Add implementations for the actions here, if you'd like
-    // For now you can just console.log something
+    assignSongData: () => {},
+    likeSong: () => {},
+    unlikeSong: () => {},
+    dislikeSong: () => {},
+    skipSong: () => {},
+    assignVolume: () => {},
+    assignTime: () => {},
+    playAudio: () => {},
+    pauseAudio: () => {},
+    startPlaying: () => {
+      console.info("starts playing song");
+      raise("LOADED");
+    },
   },
 });
 
-elements.elPlayButton.addEventListener('click', () => {
-  service.send({ type: 'PLAY' });
+// @ts-ignore
+elements.elPlayButton.addEventListener("click", () => {
+  service.send({ type: "PLAY" });
 });
-elements.elPauseButton.addEventListener('click', () => {
-  service.send({ type: 'PAUSE' });
+// @ts-ignore
+elements.elPauseButton.addEventListener("click", () => {
+  service.send({ type: "PAUSE" });
 });
-elements.elSkipButton.addEventListener('click', () => {
-  service.send({ type: 'SKIP' });
+// @ts-ignore
+elements.elSkipButton.addEventListener("click", () => {
+  service.send({ type: "SKIP" });
 });
-elements.elLikeButton.addEventListener('click', () => {
-  service.send({ type: 'LIKE' });
+// @ts-ignore
+elements.elLikeButton.addEventListener("click", () => {
+  service.send({ type: "LIKE" });
 });
-elements.elDislikeButton.addEventListener('click', () => {
-  service.send({ type: 'DISLIKE' });
+// @ts-ignore
+elements.elDislikeButton.addEventListener("click", () => {
+  service.send({ type: "DISLIKE" });
 });
 
-const service = interpret(playerMachine).start();
+const service = interpret(playerMachine, { devTools: true }).start();
 
 service.subscribe((state) => {
-  console.log(state.actions);
+  console.table(state.event);
 
-  elements.elLoadingButton.hidden = !state.matches('loading');
-  elements.elPlayButton.hidden = !state.can({ type: 'PLAY' });
-  elements.elPauseButton.hidden = !state.can({ type: 'PAUSE' });
+  // @ts-ignore
+  elements.elLoadingButton.hidden = !state.matches("loading");
+  // @ts-ignore
+  elements.elPlayButton.hidden = !state.can({ type: "PLAY" });
+  // @ts-ignore
+  elements.elPauseButton.hidden = !state.can({ type: "PAUSE" });
 });
 
-service.send('LOADED');
+service.send("LOADED");

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@xstate/inspect": "^0.5.0",
-    "xstate": "^4.25.0"
+    "eslint": "^8.50.0",
+    "xstate": "4.38.2"
   }
 }
