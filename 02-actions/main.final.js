@@ -1,49 +1,48 @@
-// @ts-check
-import '../style.css';
-import { createMachine, assign, interpret, send } from 'xstate';
-import { raise } from 'xstate/lib/actions';
-import elements from '../utils/elements';
+import "../style.css";
+import { createMachine, assign, interpret, send } from "xstate";
+import { raise } from "xstate/lib/actions";
+import elements from "../utils/elements";
 
 const playerMachine = createMachine({
-  initial: 'loading',
+  initial: "loading",
   states: {
     loading: {
       on: {
         LOADED: {
-          actions: 'assignSongData',
-          target: 'playing',
+          actions: "assignSongData",
+          target: "playing",
         },
       },
     },
     paused: {
       on: {
-        PLAY: { target: 'playing' },
+        PLAY: { target: "playing" },
       },
     },
     playing: {
-      entry: 'playAudio',
-      exit: 'pauseAudio',
+      entry: "playAudio",
+      exit: "pauseAudio",
       on: {
-        PAUSE: { target: 'paused' },
+        PAUSE: { target: "paused" },
       },
     },
   },
   on: {
     SKIP: {
-      actions: 'skipSong',
-      target: 'loading',
+      actions: "skipSong",
+      target: "loading",
     },
     LIKE: {
-      actions: 'likeSong',
+      actions: "likeSong",
     },
     UNLIKE: {
-      actions: 'unlikeSong',
+      actions: "unlikeSong",
     },
     DISLIKE: {
-      actions: ['dislikeSong', raise('SKIP')],
+      actions: ["dislikeSong", raise("SKIP")],
     },
     VOLUME: {
-      actions: 'assignVolume',
+      actions: "assignVolume",
     },
   },
 }).withConfig({
@@ -60,20 +59,20 @@ const playerMachine = createMachine({
   },
 });
 
-elements.elPlayButton.addEventListener('click', () => {
-  service.send({ type: 'PLAY' });
+elements.elPlayButton.addEventListener("click", () => {
+  service.send({ type: "PLAY" });
 });
-elements.elPauseButton.addEventListener('click', () => {
-  service.send({ type: 'PAUSE' });
+elements.elPauseButton.addEventListener("click", () => {
+  service.send({ type: "PAUSE" });
 });
-elements.elSkipButton.addEventListener('click', () => {
-  service.send({ type: 'SKIP' });
+elements.elSkipButton.addEventListener("click", () => {
+  service.send({ type: "SKIP" });
 });
-elements.elLikeButton.addEventListener('click', () => {
-  service.send({ type: 'LIKE' });
+elements.elLikeButton.addEventListener("click", () => {
+  service.send({ type: "LIKE" });
 });
-elements.elDislikeButton.addEventListener('click', () => {
-  service.send({ type: 'DISLIKE' });
+elements.elDislikeButton.addEventListener("click", () => {
+  service.send({ type: "DISLIKE" });
 });
 
 const service = interpret(playerMachine).start();
@@ -81,9 +80,9 @@ const service = interpret(playerMachine).start();
 service.subscribe((state) => {
   console.log(state.actions);
 
-  elements.elLoadingButton.hidden = !state.matches('loading');
-  elements.elPlayButton.hidden = !state.can({ type: 'PLAY' });
-  elements.elPauseButton.hidden = !state.can({ type: 'PAUSE' });
+  elements.elLoadingButton.hidden = !state.matches("loading");
+  elements.elPlayButton.hidden = !state.can({ type: "PLAY" });
+  elements.elPauseButton.hidden = !state.can({ type: "PAUSE" });
 });
 
-service.send('LOADED');
+service.send("LOADED");

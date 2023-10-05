@@ -1,4 +1,3 @@
-// @ts-check
 import "../style.css";
 import { createMachine, assign, interpret, send } from "xstate";
 import elements from "../utils/elements";

@@ -1,24 +1,23 @@
-// @ts-check
-import '../style.css';
-import { createMachine, assign, interpret, send } from 'xstate';
-import elements from '../utils/elements';
+import "../style.css";
+import { createMachine, assign, interpret, send } from "xstate";
+import elements from "../utils/elements";
 
 const playerMachine = createMachine({
-  initial: 'loading',
+  initial: "loading",
   states: {
     loading: {
       on: {
-        LOADED: { target: 'playing' },
+        LOADED: { target: "playing" },
       },
     },
     paused: {
       on: {
-        PLAY: { target: 'playing' },
+        PLAY: { target: "playing" },
       },
     },
     playing: {
       on: {
-        PAUSE: { target: 'paused' },
+        PAUSE: { target: "paused" },
       },
     },
   },
@@ -26,18 +25,18 @@ const playerMachine = createMachine({
 
 const service = interpret(playerMachine).start();
 
-elements.elPlayButton.addEventListener('click', () => {
-  service.send({ type: 'PLAY' });
+elements.elPlayButton.addEventListener("click", () => {
+  service.send({ type: "PLAY" });
 });
-elements.elPauseButton.addEventListener('click', () => {
-  service.send({ type: 'PAUSE' });
+elements.elPauseButton.addEventListener("click", () => {
+  service.send({ type: "PAUSE" });
 });
 
 service.subscribe((state) => {
   console.log(state);
-  elements.elLoadingButton.hidden = !state.matches('loading');
-  elements.elPlayButton.hidden = !state.can({ type: 'PLAY' });
-  elements.elPauseButton.hidden = !state.can({ type: 'PAUSE' });
+  elements.elLoadingButton.hidden = !state.matches("loading");
+  elements.elPlayButton.hidden = !state.can({ type: "PLAY" });
+  elements.elPauseButton.hidden = !state.can({ type: "PAUSE" });
 });
 
-service.send({ type: 'LOADED' });
+service.send({ type: "LOADED" });
