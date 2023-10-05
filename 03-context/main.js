@@ -124,10 +124,6 @@ elements.elDislikeButton.addEventListener("click", () => {
 });
 
 elements.elVolumeButton?.addEventListener("click", () => {
-  console.info(
-    "service.machine.context.volume: ",
-    service.machine.context.volume
-  );
   service.send({
     type: "VOLUME",
     level: service.machine.context.volume + 1,
